@@ -1,10 +1,11 @@
-
+-- Переменные
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local CoreGui = game:GetService("CoreGui")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 
+-- Настройки
 local visitDuration = 1 -- Стандартная длительность в секундах
 local isScriptActive = false
 local guiVisible = true
@@ -12,21 +13,24 @@ local followMode = false
 local currentTarget = nil
 local followConnection = nil
 local lastTarget = nil
-local manualFollowMode = false 
+local manualFollowMode = false
+local followDistance = 1.4 -- Фиксированная дистанция следования в метрах
 
+-- Создаем основной интерфейс
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "PlayerTeleporterGUI"
 ScreenGui.Parent = CoreGui
 
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 320, 0, 350) 
+MainFrame.Size = UDim2.new(0, 320, 0, 350)
 MainFrame.Position = UDim2.new(0.5, -160, 0.5, -175)
 MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
 MainFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
 MainFrame.BorderSizePixel = 0
 MainFrame.Parent = ScreenGui
 
+-- Добавляем возможность перемещения MainFrame
 local dragging
 local dragInput
 local dragStart
@@ -63,6 +67,7 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
+-- Заголовок
 local Title = Instance.new("TextLabel")
 Title.Name = "Title"
 Title.Size = UDim2.new(1, 0, 0, 30)
@@ -76,6 +81,7 @@ Title.Parent = MainFrame
 Title.Active = true
 Title.Draggable = true
 
+-- Отображение длительности
 local DurationLabel = Instance.new("TextLabel")
 DurationLabel.Name = "DurationLabel"
 DurationLabel.Size = UDim2.new(1, -20, 0, 30)
@@ -87,6 +93,7 @@ DurationLabel.Font = Enum.Font.SourceSans
 DurationLabel.TextSize = 16
 DurationLabel.Parent = MainFrame
 
+-- Кнопка увеличения длительности
 local IncreaseButton = Instance.new("TextButton")
 IncreaseButton.Name = "IncreaseButton"
 IncreaseButton.Size = UDim2.new(0.45, 0, 0, 30)
@@ -98,6 +105,7 @@ IncreaseButton.Font = Enum.Font.SourceSans
 IncreaseButton.TextSize = 16
 IncreaseButton.Parent = MainFrame
 
+-- Кнопка уменьшения длительности
 local DecreaseButton = Instance.new("TextButton")
 DecreaseButton.Name = "DecreaseButton"
 DecreaseButton.Size = UDim2.new(0.45, 0, 0, 30)
@@ -109,6 +117,7 @@ DecreaseButton.Font = Enum.Font.SourceSans
 DecreaseButton.TextSize = 16
 DecreaseButton.Parent = MainFrame
 
+-- Поле для ввода ника игрока
 local PlayerNameInput = Instance.new("TextBox")
 PlayerNameInput.Name = "PlayerNameInput"
 PlayerNameInput.Size = UDim2.new(0.6, 0, 0, 30)
@@ -121,6 +130,7 @@ PlayerNameInput.Font = Enum.Font.SourceSans
 PlayerNameInput.TextSize = 16
 PlayerNameInput.Parent = MainFrame
 
+-- Кнопка телепорта к указанному игроку
 local TeleportToPlayerButton = Instance.new("TextButton")
 TeleportToPlayerButton.Name = "TeleportToPlayerButton"
 TeleportToPlayerButton.Size = UDim2.new(0.35, 0, 0, 30)
@@ -132,6 +142,7 @@ TeleportToPlayerButton.Font = Enum.Font.SourceSans
 TeleportToPlayerButton.TextSize = 16
 TeleportToPlayerButton.Parent = MainFrame
 
+-- Кнопка следования за выбранным игроком
 local FollowSelectedButton = Instance.new("TextButton")
 FollowSelectedButton.Name = "FollowSelectedButton"
 FollowSelectedButton.Size = UDim2.new(0.95, 0, 0, 30)
@@ -143,6 +154,7 @@ FollowSelectedButton.Font = Enum.Font.SourceSans
 FollowSelectedButton.TextSize = 16
 FollowSelectedButton.Parent = MainFrame
 
+-- Кнопка режима следования (автоматического)
 local FollowToggle = Instance.new("TextButton")
 FollowToggle.Name = "FollowToggle"
 FollowToggle.Size = UDim2.new(0.95, 0, 0, 30)
@@ -154,6 +166,7 @@ FollowToggle.Font = Enum.Font.SourceSans
 FollowToggle.TextSize = 16
 FollowToggle.Parent = MainFrame
 
+-- Кнопка старта/остановки
 local ToggleButton = Instance.new("TextButton")
 ToggleButton.Name = "ToggleButton"
 ToggleButton.Size = UDim2.new(0.95, 0, 0, 40)
@@ -165,6 +178,7 @@ ToggleButton.Font = Enum.Font.SourceSansBold
 ToggleButton.TextSize = 18
 ToggleButton.Parent = MainFrame
 
+-- Кнопка NoClip
 local NoClipButton = Instance.new("TextButton")
 NoClipButton.Name = "NoClipButton"
 NoClipButton.Size = UDim2.new(0.95, 0, 0, 40)
@@ -177,6 +191,7 @@ NoClipButton.Font = Enum.Font.SourceSansBold
 NoClipButton.TextSize = 18
 NoClipButton.Parent = MainFrame
 
+-- Подпись под NoClip
 local NoClipLabel = Instance.new("TextLabel")
 NoClipLabel.Name = "NoClipLabel"
 NoClipLabel.Size = UDim2.new(1, -20, 0, 20)
@@ -188,6 +203,7 @@ NoClipLabel.Font = Enum.Font.SourceSans
 NoClipLabel.TextSize = 12
 NoClipLabel.Parent = MainFrame
 
+-- Статус
 local StatusLabel = Instance.new("TextLabel")
 StatusLabel.Name = "StatusLabel"
 StatusLabel.Size = UDim2.new(1, -20, 0, 30)
@@ -199,18 +215,20 @@ StatusLabel.Font = Enum.Font.SourceSans
 StatusLabel.TextSize = 14
 StatusLabel.Parent = MainFrame
 
+-- Подпись "made by cyku_cyku"
 local CreditLabel = Instance.new("TextLabel")
 CreditLabel.Name = "CreditLabel"
 CreditLabel.Size = UDim2.new(1, -20, 0, 20)
 CreditLabel.Position = UDim2.new(0, 10, 0, 370)
 CreditLabel.BackgroundTransparency = 1
-CreditLabel.Text = "made by cyku_cyku, Seido lox"
+CreditLabel.Text = "made by cyku_cyku"
 CreditLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
 CreditLabel.Font = Enum.Font.SourceSans
 CreditLabel.TextSize = 12
 CreditLabel.TextXAlignment = Enum.TextXAlignment.Right
 CreditLabel.Parent = MainFrame
 
+-- Кнопка открытия/закрытия (всегда видна)
 local OpenCloseButton = Instance.new("TextButton")
 OpenCloseButton.Name = "OpenCloseButton"
 OpenCloseButton.Size = UDim2.new(0, 100, 0, 40)
@@ -222,6 +240,7 @@ OpenCloseButton.Font = Enum.Font.SourceSansBold
 OpenCloseButton.TextSize = 16
 OpenCloseButton.Parent = ScreenGui
 
+-- Функции
 local function updateDurationDisplay()
     DurationLabel.Text = "Длительность: " .. string.format("%.1f", visitDuration) .. "сек"
 end
@@ -242,19 +261,53 @@ local function startFollowing(player)
     currentTarget = player
     
     followConnection = RunService.Heartbeat:Connect(function()
-        if (not manualFollowMode and not isScriptActive) or not currentTarget or not currentTarget.Character then
+        if (not manualFollowMode and not isScriptActive) or not currentTarget or not currentTarget.Character or not LocalPlayer.Character then
             stopFollowing()
             return
         end
         
         local targetHRP = currentTarget.Character:FindFirstChild("HumanoidRootPart")
-        local localHRP = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        local localHRP = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
         
         if targetHRP and localHRP then
-            -- Полностью копируем позицию и вращение
-            localHRP.CFrame = targetHRP.CFrame
+            -- Вычисляем направление от цели к камере
+            local camera = workspace.CurrentCamera
+            local cameraDirection = (camera.CFrame.Position - targetHRP.Position).Unit
+            cameraDirection = Vector3.new(cameraDirection.X, 0, cameraDirection.Z).Unit
+            
+            -- Вычисляем позицию на заданной дистанции
+            local newPosition = targetHRP.Position + (cameraDirection * followDistance)
+            -- Сохраняем текущую высоту
+            newPosition = Vector3.new(newPosition.X, localHRP.Position.Y, newPosition.Z)
+            
+            -- Плавно перемещаем персонажа
+            localHRP.CFrame = CFrame.new(newPosition, targetHRP.Position)
         end
     end)
+end
+
+local function teleportToPlayer(player)
+    if not player or not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then
+        return false
+    end
+    
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        local targetHRP = player.Character.HumanoidRootPart
+        local localHRP = LocalPlayer.Character.HumanoidRootPart
+        
+        -- Вычисляем позицию за спиной игрока
+        local camera = workspace.CurrentCamera
+        local cameraDirection = (camera.CFrame.Position - targetHRP.Position).Unit
+        cameraDirection = Vector3.new(cameraDirection.X, 0, cameraDirection.Z).Unit
+        
+        local newPosition = targetHRP.Position + (cameraDirection * followDistance)
+        newPosition = Vector3.new(newPosition.X, localHRP.Position.Y, newPosition.Z)
+        
+        -- Телепортируемся
+        localHRP.CFrame = CFrame.new(newPosition, targetHRP.Position)
+        return true
+    end
+    return false
 end
 
 local function getNearestPlayer()
@@ -286,18 +339,6 @@ local function getNearestPlayer()
     return nearestPlayer
 end
 
-local function teleportToPlayer(player)
-    if not player or not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then
-        return false
-    end
-    
-    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-        LocalPlayer.Character.HumanoidRootPart.CFrame = player.Character.HumanoidRootPart.CFrame
-        return true
-    end
-    return false
-end
-
 local function findPlayerByName(name)
     name = name:lower()
     for _, player in ipairs(Players:GetPlayers()) do
@@ -308,6 +349,7 @@ local function findPlayerByName(name)
     return nil
 end
 
+-- Обработчики событий
 IncreaseButton.MouseButton1Click:Connect(function()
     visitDuration = visitDuration + 0.2
     if visitDuration > 10 then visitDuration = 10 end
